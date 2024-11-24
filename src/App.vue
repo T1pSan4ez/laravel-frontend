@@ -1,47 +1,89 @@
 <script setup>
 import { ref } from "vue";
-import { useRouter } from "vue-router";
 import CityCinemaSelector from "@/components/CityCinemaSelector.vue";
+import MoviesList from "@/components/MoviesList.vue";
 
 const showModal = ref(false);
-const router = useRouter();
 
-const goToLogin = () => {
-  router.push("/login");
+const selectedCity = ref(null);
+const selectedCinema = ref(null);
+
+const handleSelection = (city, cinema) => {
+  selectedCity.value = city;
+  selectedCinema.value = cinema;
 };
 </script>
 
 <template>
-  <v-app>
-    <v-app-bar color="primary" dark>
-      <v-btn icon @click="console.log('Menu opened')">
-        <v-icon>mdi-menu</v-icon>
-      </v-btn>
+  <div id="app">
 
-      <v-spacer></v-spacer>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container-fluid">
+        <button class="btn btn-outline-light me-3" @click="console.log('Menu opened')">
+          <i class="mdi mdi-menu"></i>
+        </button>
 
-      <!-- Кнопка открытия модального окна -->
-      <v-btn @click="showModal = true">
-        Cities (Cinemas) <v-icon right>mdi-chevron-down</v-icon>
-      </v-btn>
+        <span class="navbar-brand">Movie App</span>
 
-      <v-btn outlined @click="goToLogin">
-        Sign In
-      </v-btn>
-    </v-app-bar>
+        <button
+          class="btn btn-outline-light ms-auto"
+          @click="showModal = true"
+        >
+          <span v-if="selectedCinema">
+            {{ selectedCinema.name }} ({{ selectedCity.name }})
+          </span>
+          <span v-else>
+            Cities (Cinemas)
+          </span>
+          <i class="mdi mdi-chevron-down"></i>
+        </button>
+      </div>
+    </nav>
 
-    <v-main>
-      <v-container>
-        <!-- Модальное окно -->
-        <v-dialog v-model="showModal" max-width="600">
-          <CityCinemaSelector @close="showModal = false" />
-        </v-dialog>
-      </v-container>
-    </v-main>
-  </v-app>
+    <main >
+      <div
+        class="modal fade"
+        id="cityCinemaModal"
+        tabindex="-1"
+        aria-hidden="true"
+        ref="modal"
+        v-bind:class="{ show: showModal, 'd-block': showModal }"
+        style="background: rgba(0,0,0,0.5);"
+      >
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Select City & Cinema</h5>
+              <button
+                type="button"
+                class="btn-close"
+                aria-label="Close"
+                @click="showModal = false"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <CityCinemaSelector
+                @close="showModal = false"
+                @select="handleSelection"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
-  <router-view></router-view>
+      <div>
+        <MoviesList />
+      </div>
+    </main>
+  </div>
 </template>
 
 <style scoped>
+
+.modal.fade {
+  display: none;
+}
+.modal.fade.d-block {
+  display: block;
+}
 </style>

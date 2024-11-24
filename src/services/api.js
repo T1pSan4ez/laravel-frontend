@@ -35,6 +35,18 @@ class ApiService {
     }
   }
 
+  async register(credentials) {
+    try {
+      const token = await this.getSCRFToken();
+
+      const response = await axiosInstance.post("/register", credentials);
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка регистрации:", error);
+      throw error.response?.data || error;
+    }
+  }
+
   async login(credentials) {
     try {
       const token = await this.getSCRFToken();
@@ -47,17 +59,34 @@ class ApiService {
       throw error;
     }
   }
+
+  async logout() {
+    try {
+      const response = await axiosInstance.post("/logout");
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при выходе", error);
+      throw error;
+    }
+  }
+
   async getCities() {
     try {
-      return await this.fetchData("/city");
+      return await this.fetchData("/cities");
     } catch (error) {
       console.error("Ошибка при запросе списка городов:", error);
       throw error;
     }
   }
 
-
+  async getMovies() {
+    try {
+      return await this.fetchData("/movies");
+    } catch (error) {
+      console.error("Ошибка при запросе списка фильмов:", error);
+      throw error;
+    }
+  }
 }
-
 
 export default new ApiService();
