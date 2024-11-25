@@ -87,6 +87,22 @@ class ApiService {
       throw error;
     }
   }
+
+  async getSessionById(id) {
+    try {
+      const endpoint = `/sessions/${id}`;
+      const response = await axiosInstance.get(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при запросе сессии с ID ${id}:`, error);
+      throw error.response?.data || error;
+    }
+  }
+
+
+
 }
+
+
 
 export default new ApiService();

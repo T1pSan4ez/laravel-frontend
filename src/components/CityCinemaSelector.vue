@@ -67,7 +67,7 @@ onMounted(() => {
         <div v-for="cinema in selectedCity.cinemas" :key="cinema.id" class="mb-3">
           <div class="row align-items-center">
             <div class="col">
-              <h6>{{ cinema.name }}</h6>
+              <h6 style="width: 450px">{{ cinema.name }}</h6>
               <p>{{ cinema.address }}</p>
               <button
                 class="btn btn-link text-decoration-none p-0"
