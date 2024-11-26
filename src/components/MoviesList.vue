@@ -117,7 +117,7 @@ body {
 
 .swiper-container {
   width: 100vw;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 54px);
   overflow: hidden;
   position: relative;
   background-color: black;
