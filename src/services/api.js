@@ -99,7 +99,16 @@ class ApiService {
     }
   }
 
-
+  async updateSessionSlots(id, slots) {
+    try {
+      const endpoint = `/session-slots/${id}`;
+      const response = await axiosInstance.patch(endpoint, { slots });
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при запросе PATCH сессии с ID  ${id}:`, error);
+      throw error.response?.data || error;
+    }
+  }
 
 }
 

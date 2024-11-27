@@ -3,6 +3,7 @@ import {onMounted, ref} from 'vue';
 import {useRoute} from 'vue-router';
 import ApiService from "@/services/api";
 import { Tooltip } from 'bootstrap';
+import TicketForm from "@/components/TicketForm.vue";
 
 const route = useRoute();
 const sessionData = ref(null);
@@ -11,6 +12,9 @@ const error = ref(null);
 const rows = ref(0);
 const columns = ref(0);
 
+const selectedSeats = ref([]);
+const totalAmount = ref(0);
+
 const fetchSessionData = async () => {
   try {
     const sessionId = route.params.id;
@@ -18,15 +22,26 @@ const fetchSessionData = async () => {
     sessionData.value = response.data;
     console.log(sessionData.value)
 
-
     rows.value = Math.max(...sessionData.value.slots.map((slot) => slot.row));
-    columns.value = Math.max(
-      ...sessionData.value.slots.map((slot) => slot.number)
-    );
+    columns.value = Math.max(...sessionData.value.slots.map((slot) => slot.number));
   } catch (err) {
     error.value = "Failed to load session data.";
     console.error(err);
   }
+};
+
+const toggleSeatSelection = (slot) => {
+  const existingSeatIndex = selectedSeats.value.findIndex(
+    (seat) => seat.row === slot.row && seat.number === slot.number
+  );
+
+  if (existingSeatIndex > -1) {
+    selectedSeats.value.splice(existingSeatIndex, 1);
+  } else {
+    selectedSeats.value.push(slot);
+  }
+
+  totalAmount.value = selectedSeats.value.reduce((sum, seat) => sum + parseFloat(seat.price), 0);
 };
 
 const calculateMinPrice = () => {
@@ -148,44 +163,36 @@ onMounted(() => {
                 :key="`seat-${slot.row}-${slot.number}`"
                 class="seat"
                 :class="{
+                  'seat-selected': selectedSeats.some((seat) => seat.row === slot.row && seat.number === slot.number),
                   'seat-vip': slot.type === 'vip',
-                  'seat-available': slot.type !== 'vip'
-                }"
+                  'seat-available': slot.type !== 'vip' && !selectedSeats.some((seat) => seat.row === slot.row && seat.number === slot.number),
+                  'seat-booked': slot.status === 'booked',
+              }"
                 :style="{ gridRow: slot.row, gridColumn: slot.number }"
                 data-bs-toggle="tooltip"
                 :data-bs-placement="'top'"
-                :title="`Type: ${slot.type}, Price: ${slot.price}`"
+                :title="`Seat: ${slot.row} -${slot.number}, Type: ${slot.type}, Price: ${slot.price}`"
+                @click="toggleSeatSelection(slot)"
               >
                 {{ slot.row }}-{{ slot.number }}
-
-
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="col-lg-3">
-        <div class="card shadow-sm sticky-sidebar">
-          <div class="card-body">
-            <h5 class="card-title">Tickets</h5>
-            <p class="text-muted">0 tickets, 0 UAH</p>
-            <hr />
-            <h5 class="card-title">Bar items</h5>
-            <p class="text-muted">0 items, 0 UAH</p>
-            <hr />
-            <h5 class="card-title">Total payment:</h5>
-            <h4 class="text-danger">0 UAH</h4>
-            <button class="btn btn-danger w-100 mt-3">Continue</button>
-          </div>
-        </div>
+      <div class="col-lg-3" style="height: 85vh; position: sticky; top: 0;">
+        <TicketForm
+          :session-id="route.params.id"
+          :selected-seats="selectedSeats"
+          :total-amount="totalAmount"
+          @remove-seat="toggleSeatSelection"
+        />
       </div>
     </div>
     <div v-else>Loading data...</div>
   </div>
 </template>
-
-
 
 <style scoped>
 .container-fluid {
@@ -263,5 +270,22 @@ h1 {
 
 .seat-vip {
   border-color: #d5ae16;
+}
+
+.seat-selected {
+  background-color: #2e8ef6;
+  color: white;
+}
+
+.seat-selected.seat-vip {
+  background-color: #ffd700;
+  color: black;
+}
+
+.seat-booked {
+  background-color: #7a7a7a;
+  color: #ffffff;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 </style>
