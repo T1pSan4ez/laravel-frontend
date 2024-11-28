@@ -1,5 +1,6 @@
 <script setup>
 import {onMounted, ref} from 'vue';
+import Pusher from 'pusher-js';
 import {useRoute} from 'vue-router';
 import ApiService from "@/services/api";
 import { Tooltip } from 'bootstrap';
@@ -75,7 +76,27 @@ onMounted(() => {
   setTimeout(() => {
     initializeTooltips();
   }, 500);
+
+  const pusher = new Pusher('ec70f976f6bec76964d2', {
+    cluster: 'eu',
+  });
+
+  const channel = pusher.subscribe('booking_slots');
+  channel.bind('booking_slots', (data) => {
+    console.log('Updated slots:', data.updatedSlots);
+
+    data.updatedSlots.forEach((updatedSlot) => {
+      const slot = sessionData.value.slots.find(
+        (s) => s.id === updatedSlot.slot_id
+      );
+      if (slot) {
+        slot.status = updatedSlot.status;
+      }
+    });
+  });
 });
+
+
 </script>
 
 <template>
@@ -164,14 +185,14 @@ onMounted(() => {
                 class="seat"
                 :class="{
                   'seat-selected': selectedSeats.some((seat) => seat.row === slot.row && seat.number === slot.number),
-                  'seat-vip': slot.type === 'vip',
-                  'seat-available': slot.type !== 'vip' && !selectedSeats.some((seat) => seat.row === slot.row && seat.number === slot.number),
                   'seat-booked': slot.status === 'booked',
-              }"
+                  'seat-vip': slot.type === 'vip' && slot.status !== 'booked',
+                  'seat-available': slot.type !== 'vip' && slot.status !== 'booked' && !selectedSeats.some((seat) => seat.row === slot.row && seat.number === slot.number),
+                }"
                 :style="{ gridRow: slot.row, gridColumn: slot.number }"
                 data-bs-toggle="tooltip"
                 :data-bs-placement="'top'"
-                :title="`Seat: ${slot.row} -${slot.number}, Type: ${slot.type}, Price: ${slot.price}`"
+                :title="`Seat: ${slot.row}-${slot.number}, Type: ${slot.type}, Price: ${slot.price}`"
                 @click="toggleSeatSelection(slot)"
               >
                 {{ slot.row }}-{{ slot.number }}
