@@ -1,16 +1,16 @@
 <script setup>
 import { ref } from "vue";
+import { useCinemaStore } from "@/stores/cinemaStore";
 import CityCinemaSelector from "@/components/CityCinemaSelector.vue";
-import MoviesList from "@/components/MoviesList.vue";
 
 const showModal = ref(false);
 
-const selectedCity = ref(null);
-const selectedCinema = ref(null);
+const cinemaStore = useCinemaStore();
 
 const handleSelection = (city, cinema) => {
-  selectedCity.value = city;
-  selectedCinema.value = cinema;
+  cinemaStore.selectCity(city);
+  cinemaStore.selectCinema(cinema);
+  console.log("Selected cinema:", cinemaStore.selectedCinema);
 };
 
 const closeOnBackdrop = (event) => {
@@ -23,17 +23,16 @@ const closeOnBackdrop = (event) => {
 
 <template>
   <div id="app">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
       <div class="container-fluid">
         <button class="btn btn-outline-light me-3" @click="console.log('Menu opened')">
           <i class="mdi mdi-menu"></i>
         </button>
         <router-link to="/"><span class="navbar-brand">Movie App</span></router-link>
 
-
         <button class="btn btn-outline-light ms-auto" @click="showModal = true">
-          <span v-if="selectedCinema">
-            {{ selectedCinema.name }} ({{ selectedCity.name }})
+          <span v-if="cinemaStore.selectedCinema">
+            {{ cinemaStore.selectedCinema.name }} ({{ cinemaStore.selectedCity.name }})
           </span>
           <span v-else>
             Cities (Cinemas)
@@ -46,9 +45,9 @@ const closeOnBackdrop = (event) => {
         class="modal fade"
         id="cityCinemaModal"
         tabindex="-1"
-        aria-hidden="true"
+        :aria-hidden="!showModal"
         ref="modal"
-        v-bind:class="{ show: showModal, 'd-block': showModal }"
+        :class="{ show: showModal, 'd-block': showModal }"
         @click="closeOnBackdrop"
         style="background: rgba(0,0,0,0.5);"
       >
@@ -77,8 +76,6 @@ const closeOnBackdrop = (event) => {
     <main>
       <router-view />
     </main>
-
-
   </div>
 </template>
 

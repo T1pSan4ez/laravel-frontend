@@ -1,21 +1,34 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, watch, ref } from "vue";
 import ApiService from "@/services/api";
+import { useCinemaStore } from "@/stores/cinemaStore";
 
+const props = defineProps({
+  cinema: {
+    type: Object,
+    required: false,
+  },
+});
+
+console.log("Received cinema:", props.cinema);
+const cinemaStore = useCinemaStore();
 const movies = ref([]);
 const swiperContainer = ref(null);
-
 const placeholderImage = "https://via.placeholder.com/300x450?text=No+Image";
 
-const fetchMovies = async () => {
+const fetchMoviesByCinema = async () => {
+  if (!cinemaStore.selectedCinema) {
+    movies.value = [];
+    return;
+  }
+
   try {
-    const response = await ApiService.getMovies();
-    console.log(response.data);
+    const response = await ApiService.getMoviesByCinema(cinemaStore.selectedCinema.id);
     movies.value = response.data.map(movie => ({
       ...movie,
       sessions: movie.sessions.map(session => ({
         id: session.id,
-        time: new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: new Date(session.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       })),
     }));
   } catch (error) {
@@ -37,9 +50,13 @@ const scrollRight = () => {
   });
 };
 
-onMounted(() => {
-  fetchMovies();
-});
+watch(
+  () => cinemaStore.selectedCinema,
+  () => {
+    fetchMoviesByCinema();
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -78,19 +95,17 @@ onMounted(() => {
               <span class="movie-action">More details</span>
               <span class="movie-action">Watch</span>
             </div>
-
             <div class="movie-bottom">
               <h3 style="margin-top: 150px">Global</h3>
               <p>19 December</p>
               <p>Closest session:</p>
-
               <p>Session schedule:</p>
               <div class="session-info">
-               <span
-                 v-for="(session, index) in movie.sessions"
-                 :key="index"
-                 class="session-time"
-               >
+                <span
+                  v-for="(session, index) in movie.sessions"
+                  :key="index"
+                  class="session-time"
+                >
                   <router-link :to="{ name: 'session', params: { id: session.id } }">
                     {{ session.time }}
                   </router-link>
@@ -99,7 +114,6 @@ onMounted(() => {
             </div>
           </div>
         </div>
-
         <div class="movie-title-overlay">
           <h2 class="movie-title">{{ movie.title || "Unknown Title" }}</h2>
         </div>
@@ -107,6 +121,7 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
 
 <style scoped>
 html,

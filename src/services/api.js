@@ -88,6 +88,17 @@ class ApiService {
     }
   }
 
+  async getMoviesByCinema(cinemaId) {
+    try {
+      const endpoint = `/movies/${cinemaId}`;
+      const response = await axiosInstance.get(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при запросе фильмов для кинотеатра с ID ${cinemaId}:`, error);
+      throw error.response?.data || error;
+    }
+  }
+
   async getSessionById(id) {
     try {
       const endpoint = `/sessions/${id}`;
@@ -106,6 +117,16 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error(`Ошибка при запросе PATCH сессии с ID  ${id}:`, error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async fetchProducts() {
+    try {
+      const response = await axiosInstance.get("/products");
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при запросе списка продуктов:", error);
       throw error.response?.data || error;
     }
   }

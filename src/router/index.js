@@ -20,7 +20,6 @@ const router = createRouter({
       component: SessionPlan,
       props: true,
     },
-
     {
       path: '/not-found',
       name: 'NotFound',
