@@ -10,7 +10,6 @@ const props = defineProps({
   },
 });
 
-console.log("Received cinema:", props.cinema);
 const cinemaStore = useCinemaStore();
 const movies = ref([]);
 const swiperContainer = ref(null);
@@ -245,7 +244,7 @@ button {
 }
 
 button:hover {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgb(86, 164, 244);
 }
 
 .swiper-slide:hover .movie-blur {

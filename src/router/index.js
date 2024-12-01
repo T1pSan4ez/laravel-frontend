@@ -1,35 +1,51 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import App from "@/App.vue";
-import NotFound from "@/components/NotFound.vue";
+import { createRouter, createWebHistory } from "vue-router";
 import MoviesList from "@/components/MoviesList.vue";
 import SessionPlan from "@/components/SessionPlan.vue";
+import AuthContainer from "@/components/auth/AuthContainer.vue";
+import NotFound from "@/components/NotFound.vue";
 
-
+import { useAuthStore } from "@/stores/authStore";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'Home',
+      path: "/",
+      name: "Home",
       component: MoviesList,
     },
     {
-      path: '/session/:id',
-      name: 'session',
+      path: "/session/:id",
+      name: "session",
       component: SessionPlan,
       props: true,
     },
     {
-      path: '/not-found',
-      name: 'NotFound',
+      path: "/auth",
+      name: "auth",
+      component: AuthContainer,
+    },
+    {
+      path: "/not-found",
+      name: "NotFound",
       component: NotFound,
     },
     {
-      path: '/:catchAll(.*)',
-      redirect: { name: 'NotFound' },
+      path: "/:catchAll(.*)",
+      redirect: { name: "NotFound" },
     },
   ],
-})
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  const isAuthenticated = authStore.isAuthenticated;
+
+  if (to.name === "auth" && isAuthenticated) {
+    next({ name: "Home" });
+  } else {
+    next();
+  }
+});
+
+export default router;

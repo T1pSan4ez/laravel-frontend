@@ -62,7 +62,16 @@ class ApiService {
 
   async logout() {
     try {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await axiosInstance.post("/logout");
+
+      localStorage.removeItem("authToken");
+
+      console.log("Logout successful:", response.data);
       return response.data;
     } catch (error) {
       console.error("Ошибка при выходе", error);

@@ -1,16 +1,18 @@
 <script setup>
 import { ref } from "vue";
 import { useCinemaStore } from "@/stores/cinemaStore";
+import { useAuthStore } from "@/stores/authStore";
 import CityCinemaSelector from "@/components/CityCinemaSelector.vue";
+import router from "@/router/index.js";
+import ApiService from "@/services/api";
 
 const showModal = ref(false);
-
 const cinemaStore = useCinemaStore();
+const authStore = useAuthStore();
 
 const handleSelection = (city, cinema) => {
   cinemaStore.selectCity(city);
   cinemaStore.selectCinema(cinema);
-  console.log("Selected cinema:", cinemaStore.selectedCinema);
 };
 
 const closeOnBackdrop = (event) => {
@@ -18,6 +20,15 @@ const closeOnBackdrop = (event) => {
   if (!modalDialog.contains(event.target)) {
     showModal.value = false;
   }
+};
+
+const navigateToAuth = () => {
+  router.push({ name: "auth" });
+};
+
+const logout = () => {
+  ApiService.logout();
+  authStore.logout();
 };
 </script>
 
@@ -39,6 +50,17 @@ const closeOnBackdrop = (event) => {
           </span>
           <i class="mdi mdi-chevron-down"></i>
         </button>
+
+        <template v-if="authStore.isAuthenticated">
+          <button class="btn btn-outline-light ms-3" @click="logout">
+            Logout
+          </button>
+        </template>
+        <template v-else>
+          <button class="btn btn-outline-light ms-3" @click="navigateToAuth">
+            Sign In
+          </button>
+        </template>
       </div>
 
       <div
