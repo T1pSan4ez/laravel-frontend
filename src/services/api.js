@@ -140,6 +140,18 @@ class ApiService {
     }
   }
 
+  // async loginWithGoogle() {
+  //   try {
+  //
+  //
+  //     const response = await axiosInstance.get('/auth/google');
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Ошибка при Google авторизации:', error);
+  //     throw error;
+  //   }
+  // }
+
 }
 
 

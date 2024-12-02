@@ -70,6 +70,16 @@ const handleLogin = async () => {
     console.error("Login error:", error);
   }
 };
+
+// const handleGoogleLogin = async () => {
+//   try {
+//     const redirectUrl = await ApiService.loginWithGoogle();
+//
+//     window.location.href = redirectUrl;
+//   } catch (error) {
+//     console.error("Ошибка при Google авторизации:", error);
+//   }
+// };
 </script>
 
 
@@ -110,4 +120,8 @@ const handleLogin = async () => {
       <button type="submit" class="btn btn-primary w-100">Login</button>
     </slot>
   </form>
+
+<!--  <button type="button" class="btn btn-danger w-100 mt-3" @click="handleGoogleLogin">-->
+<!--    Login with Google-->
+<!--  </button>-->
 </template>

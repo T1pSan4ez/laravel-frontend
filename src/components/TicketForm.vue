@@ -2,6 +2,8 @@
 import { ref } from "vue";
 import { defineProps, defineEmits } from "vue";
 import ApiService from "@/services/api";
+import { useTicketStore } from "@/stores/ticketStore";
+import router from "@/router/index.js";
 
 const props = defineProps({
   sessionId: {
@@ -22,9 +24,20 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["remove-seat", "remove-product"]);
+const emit = defineEmits(["remove-seat", "remove-product", "switch-view"]);
 
 const isSubmitting = ref(false);
+const currentView = ref("seating");
+const ticketStore = useTicketStore();
+const handleViewSwitch = () => {
+  if (currentView.value === "seating") {
+    currentView.value = "snacks";
+    emit("switch-view", "snacks");
+  } else {
+    currentView.value = "seating";
+    emit("switch-view", "seating");
+  }
+};
 
 const handleSubmit = async () => {
   const sessionId = props.sessionId;
@@ -36,11 +49,16 @@ const handleSubmit = async () => {
   try {
     const response = await ApiService.updateSessionSlots(sessionId, slots);
     console.log("Response from server:", response);
-    alert("Seats successfully booked!");
   } catch (error) {
     console.error("Error updating session slots:", error);
-    alert("Failed to update session slots. Please try again.");
   }
+};
+
+const handleGenerateQRCode = () => {
+  ticketStore.setSelectedSeats(props.selectedSeats);
+  ticketStore.setSelectedProducts(props.selectedProducts);
+
+  router.push({ name: "QRCodePage" });
 };
 </script>
 
@@ -64,11 +82,6 @@ const handleSubmit = async () => {
             ({{ seat.type ? seat.type.toUpperCase() : "UNKNOWN" }})
           </strong>
           <p class="mb-1 text-muted">{{ seat.price }} UAH</p>
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            placeholder="Promo code?"
-          />
         </div>
         <button
           class="btn btn-sm btn-danger ms-2"
@@ -104,11 +117,28 @@ const handleSubmit = async () => {
         Total: <span class="text-danger">{{ totalAmount.toFixed(2) }} UAH</span>
       </h5>
       <button
+        v-if="currentView === 'seating'"
+        class="btn btn-primary w-100 mt-2"
+        @click="handleViewSwitch"
+      >
+        Continue to Snacks
+      </button>
+      <button
+        v-else
+        class="btn btn-secondary w-100 mt-2"
+        @click="handleViewSwitch"
+      >
+        Back to Seating
+      </button>
+      <button
         class="btn btn-danger w-100 mt-2"
         :disabled="isSubmitting"
         @click="handleSubmit"
       >
-        {{ isSubmitting ? "Processing..." : "Continue" }}
+        {{ isSubmitting ? "Processing..." : "Book Now" }}
+      </button>
+      <button class="btn btn-success w-100 mt-3" @click="handleGenerateQRCode">
+        Generate QR Code
       </button>
     </div>
   </div>

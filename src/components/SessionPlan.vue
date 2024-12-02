@@ -146,8 +146,6 @@ onMounted(() => {
           class="img-fluid rounded shadow-sm"
           style="max-height: 500px;"
         />
-        <button v-if="currentView === 'seating'" class="btn btn-primary mt-3" @click="switchToSnacks">Continue to Snacks</button>
-        <button v-else class="btn btn-secondary mt-3" @click="switchToSeating">Back to Seating</button>
       </div>
 
       <div class="col-lg-6">
@@ -254,6 +252,7 @@ onMounted(() => {
           :total-amount="totalAmount"
           @remove-seat="toggleSeatSelection"
           @remove-product="removeProduct"
+          @switch-view="currentView = $event"
         />
       </div>
     </div>

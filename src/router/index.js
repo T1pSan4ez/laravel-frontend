@@ -5,6 +5,7 @@ import AuthContainer from "@/components/auth/AuthContainer.vue";
 import NotFound from "@/components/NotFound.vue";
 
 import { useAuthStore } from "@/stores/authStore";
+import QRCode from "@/components/QRCode.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,6 +25,11 @@ const router = createRouter({
       path: "/auth",
       name: "auth",
       component: AuthContainer,
+    },
+    {
+      path: "/qrcode",
+      name: "QRCodePage",
+      component: QRCode,
     },
     {
       path: "/not-found",
