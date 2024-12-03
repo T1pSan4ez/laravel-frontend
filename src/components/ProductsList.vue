@@ -22,7 +22,7 @@ const error = ref(null);
 const fetchProducts = async () => {
   isLoading.value = true;
   try {
-    const response = await ApiService.fetchProducts();
+    const response = await ApiService.getProducts();
     products.value = response.products.map((product) => ({
       ...product,
     }));

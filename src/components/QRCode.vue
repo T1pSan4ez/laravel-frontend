@@ -58,7 +58,7 @@ onMounted(() => {
 <template>
   <div class="container mt-4">
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-8">
         <h3 class="text-center">Ticket Information</h3>
         <div class="card shadow-sm p-4">
           <div class="mb-3">
@@ -105,7 +105,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="col-md-6">
+      <div class="col-md-4">
         <h3 class="text-center">Your QR Code</h3>
         <div class="text-center my-4">
           <div v-if="!hasData" class="alert alert-warning">

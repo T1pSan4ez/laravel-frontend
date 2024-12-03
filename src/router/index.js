@@ -6,6 +6,8 @@ import NotFound from "@/components/NotFound.vue";
 
 import { useAuthStore } from "@/stores/authStore";
 import QRCode from "@/components/QRCode.vue";
+import MovieDiscover from "@/components/MovieDiscover.vue";
+import MovieDetails from "@/components/MovieDetails.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,6 +32,16 @@ const router = createRouter({
       path: "/qrcode",
       name: "QRCodePage",
       component: QRCode,
+    },
+    {
+      path: "/movies",
+      name: "MovieDiscover",
+      component: MovieDiscover,
+    },
+    {
+      path: "/movie/:id",
+      name: "MovieDetails",
+      component: MovieDetails,
     },
     {
       path: "/not-found",

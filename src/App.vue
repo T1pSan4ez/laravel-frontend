@@ -36,10 +36,8 @@ const logout = () => {
   <div id="app">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
       <div class="container-fluid">
-        <button class="btn btn-outline-light me-3" @click="console.log('Menu opened')">
-          <i class="mdi mdi-menu"></i>
-        </button>
         <router-link to="/"><span class="navbar-brand">Movie App</span></router-link>
+        <router-link to="/movies"><span class="navbar-brand">Discover</span></router-link>
 
         <button class="btn btn-outline-light ms-auto" @click="showModal = true">
           <span v-if="cinemaStore.selectedCinema">

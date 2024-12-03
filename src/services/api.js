@@ -88,11 +88,31 @@ class ApiService {
     }
   }
 
-  async getMovies() {
+  async getMovies(params = {}) {
     try {
-      return await this.fetchData("/movies");
+      return await this.fetchData("/movies", params);
     } catch (error) {
       console.error("Ошибка при запросе списка фильмов:", error);
+      throw error;
+    }
+  }
+
+  async getMovie(movieId) {
+    try {
+      const endpoint = `/movie/${movieId}`;
+      const response = await axiosInstance.get(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при запросе фильма с ID ${movieId}:`, error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async getGenres() {
+    try {
+      return await this.fetchData("/genres");
+    } catch (error) {
+      console.error("Ошибка при запросе списка жанров:", error);
       throw error;
     }
   }
@@ -130,7 +150,7 @@ class ApiService {
     }
   }
 
-  async fetchProducts() {
+  async getProducts() {
     try {
       const response = await axiosInstance.get("/products");
       return response.data;
