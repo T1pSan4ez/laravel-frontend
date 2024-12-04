@@ -3,17 +3,27 @@ import Constants from '@/constants.js';
 
 const axiosInstance = axios.create({
   baseURL: Constants.API_BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {'Content-Type': 'application/json'},
   withCredentials: true,
   withXSRFToken: true,
 });
 
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+
 class ApiService {
-  constructor() {}
+  constructor() {
+  }
 
   async fetchData(endpoint, params = {}) {
     try {
-      const response = await axiosInstance.get(endpoint, { params });
+      const response = await axiosInstance.get(endpoint, {params});
       return response.data;
     } catch (error) {
       console.error("Ошибка GET-запроса:", error);
@@ -24,7 +34,7 @@ class ApiService {
   async getSCRFToken() {
     try {
 
-      const response = await axios.get("http://example.camelot/sanctum/csrf-cookie", {
+      const response = await axios.get("http://localhost/sanctum/csrf-cookie", {
         withCredentials: true,
       });
       console.log("CSRF TOKEN:", response.headers);
@@ -142,7 +152,7 @@ class ApiService {
   async updateSessionSlots(id, slots) {
     try {
       const endpoint = `/session-slots/${id}`;
-      const response = await axiosInstance.patch(endpoint, { slots });
+      const response = await axiosInstance.patch(endpoint, {slots});
       return response.data;
     } catch (error) {
       console.error(`Ошибка при запросе PATCH сессии с ID  ${id}:`, error);
@@ -160,20 +170,67 @@ class ApiService {
     }
   }
 
-  // async loginWithGoogle() {
-  //   try {
-  //
-  //
-  //     const response = await axiosInstance.get('/auth/google');
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Ошибка при Google авторизации:', error);
-  //     throw error;
-  //   }
-  // }
+  async loginWithGoogleRedirect() {
+    try {
+      const response = await this.fetchData('/auth/google/redirect');
+      return response.url;
+    } catch (error) {
+      console.error("Ошибка при редиректе на Google:", error);
+      throw error;
+    }
+  }
+
+  async getUserProfile() {
+    try {
+      const response = await axiosInstance.get('/user');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка получения данных пользователя:', error);
+      throw error;
+    }
+  }
+
+  async changeProfile(data) {
+    try {
+      const response = await axiosInstance.post('/user/profile', data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля:', error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async changePassword(data) {
+    try {
+      const response = await axiosInstance.post('/user/password', data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении пароля:', error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async generateQRToken() {
+    try {
+      const response = await axiosInstance.get('/qr-token');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка генерации QR токена:', error);
+      throw error;
+    }
+  }
+
+  async loginWithQRToken(token) {
+    try {
+      const response = await axiosInstance.post("/login/qr", { token });
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при входе с использованием QR-кода:", error);
+      throw error.response?.data || error;
+    }
+  }
 
 }
-
 
 
 export default new ApiService();

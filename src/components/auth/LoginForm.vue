@@ -1,8 +1,8 @@
 <script setup>
-import {ref} from "vue";
+import { ref, onMounted } from "vue";
 import ApiService from "@/services/api";
 import router from "@/router/index.js";
-import {useAuthStore} from "@/stores/authStore.js";
+import { useAuthStore } from "@/stores/authStore.js";
 
 const authStore = useAuthStore();
 
@@ -11,6 +11,9 @@ const loginForm = ref({
   password: "",
   rememberMe: false,
 });
+
+const qrToken = ref("");
+const qrError = ref(null);
 
 const errors = ref({
   email: "",
@@ -62,26 +65,69 @@ const handleLogin = async () => {
     if (token) {
       localStorage.setItem("authToken", token);
       authStore.loginSuccess(token);
+
+      const userData = await ApiService.getUserProfile();
+      authStore.setUser(userData);
       console.log("Login successful:", response);
 
-      await router.push({name: "Home"});
+      await router.push({ name: "Home" });
     }
   } catch (error) {
     console.error("Login error:", error);
   }
 };
 
-// const handleGoogleLogin = async () => {
-//   try {
-//     const redirectUrl = await ApiService.loginWithGoogle();
-//
-//     window.location.href = redirectUrl;
-//   } catch (error) {
-//     console.error("Ошибка при Google авторизации:", error);
-//   }
-// };
-</script>
+const loginWithGoogle = async () => {
+  try {
+    window.location.href = await ApiService.loginWithGoogleRedirect();
+  } catch (error) {
+    console.error("Ошибка входа через Google:", error);
+  }
+};
 
+const handleUrlToken = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get("token");
+
+  if (token) {
+    localStorage.setItem("authToken", token);
+    authStore.loginSuccess(token);
+
+    const userData = await ApiService.getUserProfile();
+    authStore.setUser(userData);
+
+    router.push({name: "Home"});
+  }
+};
+
+const handleQRTokenLogin = async () => {
+  qrError.value = null;
+  try {
+    const response = await ApiService.loginWithQRToken(qrToken.value);
+
+    const token = response.token;
+
+    if (token) {
+      localStorage.setItem("authToken", token);
+      authStore.loginSuccess(token);
+
+      const userData = await ApiService.getUserProfile();
+      authStore.setUser(userData);
+
+      console.log("QR Token Login successful:", response);
+      await router.push({ name: "Home" });
+    }
+  } catch (error) {
+    qrError.value =
+      error.message || "Ошибка при входе с использованием QR-кода.";
+    console.error("Ошибка при авторизации через QR-код:", error);
+  }
+};
+
+onMounted(() => {
+  handleUrlToken();
+});
+</script>
 
 <template>
   <form @submit.prevent="handleLogin">
@@ -121,7 +167,27 @@ const handleLogin = async () => {
     </slot>
   </form>
 
-<!--  <button type="button" class="btn btn-danger w-100 mt-3" @click="handleGoogleLogin">-->
-<!--    Login with Google-->
-<!--  </button>-->
+  <button type="button" class="btn btn-danger w-100 mt-3" @click="loginWithGoogle">
+    Login with Google
+  </button>
+
+  <div class="mt-4">
+    <h5>Login with QR Token</h5>
+    <div class="mb-3">
+      <label for="qrToken" class="form-label">QR Token</label>
+      <input
+        type="text"
+        id="qrToken"
+        class="form-control"
+        v-model="qrToken"
+        placeholder="Enter your QR token"
+      />
+    </div>
+    <button class="btn btn-secondary w-100" @click="handleQRTokenLogin">
+      Login with QR Token
+    </button>
+    <div v-if="qrError" class="text-danger mt-2">
+      {{ qrError }}
+    </div>
+  </div>
 </template>

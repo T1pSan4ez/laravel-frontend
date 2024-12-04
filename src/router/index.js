@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/authStore";
 import QRCode from "@/components/QRCode.vue";
 import MovieDiscover from "@/components/MovieDiscover.vue";
 import MovieDetails from "@/components/MovieDetails.vue";
+import UserProfile from "@/components/auth/UserProfile.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +45,11 @@ const router = createRouter({
       component: MovieDetails,
     },
     {
+      path: "/profile",
+      name: "profile",
+      component: UserProfile,
+    },
+    {
       path: "/not-found",
       name: "NotFound",
       component: NotFound,
@@ -60,6 +66,8 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = authStore.isAuthenticated;
 
   if (to.name === "auth" && isAuthenticated) {
+    next({ name: "Home" });
+  } else if (to.name === "profile" && !isAuthenticated) {
     next({ name: "Home" });
   } else {
     next();

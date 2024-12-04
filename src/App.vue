@@ -26,10 +26,20 @@ const navigateToAuth = () => {
   router.push({ name: "auth" });
 };
 
+const navigateToProfile = () => {
+  router.push({ name: "profile" });
+};
+
 const logout = () => {
   ApiService.logout();
   authStore.logout();
 };
+
+authStore.$subscribe((mutation, state) => {
+  if (!state.isAuthenticated && router.currentRoute.value.name === "profile") {
+    router.push({ name: "Home" });
+  }
+});
 </script>
 
 <template>
@@ -50,6 +60,9 @@ const logout = () => {
         </button>
 
         <template v-if="authStore.isAuthenticated">
+          <button class="btn btn-outline-light ms-3" @click="navigateToProfile">
+            Profile
+          </button>
           <button class="btn btn-outline-light ms-3" @click="logout">
             Logout
           </button>
