@@ -1,13 +1,29 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import {ref, onMounted, watch} from "vue";
 import { useRoute } from "vue-router";
 import ApiService from "@/services/api";
 import notAvailableImage from "@/assets/not-avaliable.png";
+import MovieComment from "@/components/MovieComment.vue";
+import MovieRating from "@/components/MovieRating.vue";
+import { useAuthStore } from "@/stores/authStore";
 
+const authStore = useAuthStore();
 const route = useRoute();
 const movie = ref(null);
 const error = ref(null);
 const isLoading = ref(true);
+const currentUser = ref(null);
+
+const fetchUserProfile = async () => {
+  if (!authStore.isAuthenticated) return false;
+  try {
+    const response = await ApiService.getUserProfile();
+    authStore.setUser(response.data);
+    currentUser.value = response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+};
 
 const fetchMovie = async () => {
   try {
@@ -22,7 +38,16 @@ const fetchMovie = async () => {
   }
 };
 
+watch(() => authStore.isAuthenticated, async (isAuthenticated) => {
+  if (isAuthenticated) {
+    await fetchUserProfile();
+  } else {
+    currentUser.value = null;
+  }
+});
+
 onMounted(() => {
+  fetchUserProfile();
   fetchMovie();
 });
 </script>
@@ -56,11 +81,11 @@ onMounted(() => {
           </p>
           <p class="text-muted">
             <span style="font-weight: bold">Age Rating:</span>
-           {{ movie.data.age_rating || "N/A" }}
+            {{ movie.data.age_rating || "N/A" }}
           </p>
           <p class="text-muted">
             <span style="font-weight: bold">Duration (minutes):</span>
-          {{ movie.data.duration || "N/A" }}
+            {{ movie.data.duration || "N/A" }}
           </p>
           <p>{{ movie.description }}</p>
           <div v-if="movie.data.genres && movie.data.genres.length > 0">
@@ -74,6 +99,9 @@ onMounted(() => {
         <h4>Description</h4>
         <p>{{ movie.data.description }}</p>
       </div>
+
+      <MovieRating :movie-id="movie.data.id" :current-user="currentUser" />
+      <MovieComment :current-user="currentUser" />
     </div>
   </div>
 </template>

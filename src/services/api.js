@@ -230,6 +230,56 @@ class ApiService {
     }
   }
 
+  async getMovieComments(movieId, params) {
+    try {
+      const response = await axiosInstance.get(`/movies/${movieId}/comments`, params);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching movie comments:", error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async addMovieComment(movieId, commentData) {
+    try {
+      const response = await axiosInstance.post(`/movies/${movieId}/comments`, commentData);
+      return response.data;
+    } catch (error) {
+      console.error("Error posting movie comment:", error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async deleteMovieComment(commentId) {
+    try {
+      const response = await axiosInstance.delete(`/movies/comments/${commentId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async getMovieRating(movieId) {
+    try {
+      const response = await axiosInstance.get(`/movies/${movieId}/ratings`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching movie rating:", error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async addMovieRating(movieId, ratingData) {
+    try {
+      const response = await axiosInstance.post(`/movies/${movieId}/ratings`, ratingData);
+      return response.data;
+    } catch (error) {
+      console.error("Error posting movie rating:", error);
+      throw error.response?.data || error;
+    }
+  }
+
 }
 
 

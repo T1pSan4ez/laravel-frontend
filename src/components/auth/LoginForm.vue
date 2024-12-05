@@ -66,16 +66,13 @@ const handleLogin = async () => {
       localStorage.setItem("authToken", token);
       authStore.loginSuccess(token);
 
-      const userData = await ApiService.getUserProfile();
-      authStore.setUser(userData);
-      console.log("Login successful:", response);
-
       await router.push({ name: "Home" });
     }
   } catch (error) {
     console.error("Login error:", error);
   }
 };
+
 
 const loginWithGoogle = async () => {
   try {
@@ -93,10 +90,7 @@ const handleUrlToken = async () => {
     localStorage.setItem("authToken", token);
     authStore.loginSuccess(token);
 
-    const userData = await ApiService.getUserProfile();
-    authStore.setUser(userData);
-
-    router.push({name: "Home"});
+    await router.push({name: "Home"});
   }
 };
 
@@ -111,8 +105,6 @@ const handleQRTokenLogin = async () => {
       localStorage.setItem("authToken", token);
       authStore.loginSuccess(token);
 
-      const userData = await ApiService.getUserProfile();
-      authStore.setUser(userData);
 
       console.log("QR Token Login successful:", response);
       await router.push({ name: "Home" });
