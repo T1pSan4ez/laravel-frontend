@@ -8,7 +8,7 @@ import { useAuthStore } from "@/stores/authStore";
 import QRCode from "@/components/QRCode.vue";
 import MovieDiscover from "@/components/MovieDiscover.vue";
 import MovieDetails from "@/components/MovieDetails.vue";
-import UserProfile from "@/components/auth/UserProfile.vue";
+import UserProfile from "@/components/UserProfile.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

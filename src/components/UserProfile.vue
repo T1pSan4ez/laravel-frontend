@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import ApiService from "@/services/api";
+import ApiService from "@/services/api.js";
 import QRCode from "qrcode";
+import MovieRecommendation from "@/components/MovieRecommendation.vue";
 
 const name = ref("");
 const email = ref(null);
@@ -131,7 +132,7 @@ onMounted(() => {
       </div>
 
       <div class="col-md-6">
-        <div class="card">
+        <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title">QR Code</h5>
             <p>Generate a QR code for secure login.</p>
@@ -156,17 +157,13 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <MovieRecommendation />
   </div>
 </template>
 
 <style scoped>
 .container {
   max-width: 800px;
-}
-
-.card img {
-  max-width: 150px;
-  max-height: 150px;
-  margin-top: 10px;
 }
 </style>

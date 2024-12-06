@@ -38,6 +38,21 @@ const fetchMovie = async () => {
   }
 };
 
+const addUserActivity = async (movieId) => {
+  if (!authStore.isAuthenticated) return;
+
+  try {
+    const activityData = {
+      movie_id: movieId,
+      action: "view",
+    };
+
+    await ApiService.addUserActivity(activityData);
+  } catch (error) {
+    console.error("Error recording user activity:", error);
+  }
+};
+
 watch(() => authStore.isAuthenticated, async (isAuthenticated) => {
   if (isAuthenticated) {
     await fetchUserProfile();
@@ -49,6 +64,8 @@ watch(() => authStore.isAuthenticated, async (isAuthenticated) => {
 onMounted(() => {
   fetchUserProfile();
   fetchMovie();
+
+  addUserActivity(route.params.id);
 });
 </script>
 

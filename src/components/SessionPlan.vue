@@ -250,6 +250,7 @@ onMounted(() => {
           :selected-seats="selectedSeats"
           :selected-products="selectedProducts"
           :total-amount="totalAmount"
+          :movie-id="sessionData.movie.id"
           @remove-seat="toggleSeatSelection"
           @remove-product="removeProduct"
           @switch-view="currentView = $event"

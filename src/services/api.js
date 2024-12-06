@@ -280,6 +280,36 @@ class ApiService {
     }
   }
 
+  async getUserActivity() {
+    try {
+      const response = await axiosInstance.get(`/user-activity`);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting user activity:", error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async addUserActivity(activityData) {
+    try {
+      const response = await axiosInstance.post(`/user-activity`, activityData);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding user activity:", error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async getRecommendedSessions() {
+    try {
+      const response = await axiosInstance.get(`/user-activity/recommend-sessions`);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting user activity:", error);
+      throw error.response?.data || error;
+    }
+  }
+
 }
 
 

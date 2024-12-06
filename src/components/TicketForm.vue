@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { defineProps, defineEmits } from "vue";
 import ApiService from "@/services/api";
+import { useAuthStore } from "@/stores/authStore";
 import { useTicketStore } from "@/stores/ticketStore";
 import router from "@/router/index.js";
 
@@ -22,13 +23,32 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  movieId: {
+    type: Number,
+    required: true,
+  },
 });
 
 const emit = defineEmits(["remove-seat", "remove-product", "switch-view"]);
 
 const isSubmitting = ref(false);
 const currentView = ref("seating");
+const currentUser = ref(null);
 const ticketStore = useTicketStore();
+const authStore = useAuthStore();
+
+const fetchCurrentUser = async () => {
+  if (authStore.isAuthenticated) {
+    try {
+      const response = await ApiService.getUserProfile();
+      authStore.setUser(response.data);
+      currentUser.value = response.data;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  }
+};
+
 const handleViewSwitch = () => {
   if (currentView.value === "seating") {
     currentView.value = "snacks";
@@ -39,6 +59,11 @@ const handleViewSwitch = () => {
   }
 };
 
+const activityData = {
+  movie_id: props.movieId,
+  action: "booking",
+};
+
 const handleSubmit = async () => {
   const sessionId = props.sessionId;
   const slots = props.selectedSeats.map((seat) => ({
@@ -46,11 +71,33 @@ const handleSubmit = async () => {
     status: "booked",
   }));
   console.log("Slots to be sent:", slots);
+
+  isSubmitting.value = true;
+
   try {
     const response = await ApiService.updateSessionSlots(sessionId, slots);
     console.log("Response from server:", response);
+
+    if (currentUser.value) {
+      await addUserActivity(activityData);
+    }
   } catch (error) {
-    console.error("Error updating session slots:", error);
+    console.error("Error updating session slots or recording activity:", error);
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const addUserActivity = async (activityData) => {
+  try {
+    const response = await ApiService.addUserActivity( {
+      movie_id: activityData.movie_id,
+      action: activityData.action,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error recording user activity:", error);
+    throw error;
   }
 };
 
@@ -58,8 +105,12 @@ const handleGenerateQRCode = () => {
   ticketStore.setSelectedSeats(props.selectedSeats);
   ticketStore.setSelectedProducts(props.selectedProducts);
 
-  router.push({ name: "QRCodePage" });
+  router.push({name: "QRCodePage"});
 };
+
+onMounted(() => {
+  fetchCurrentUser();
+});
 </script>
 
 <template>
@@ -91,7 +142,7 @@ const handleGenerateQRCode = () => {
         </button>
       </div>
 
-      <hr class="my-4" />
+      <hr class="my-4"/>
 
       <div
         v-for="product in selectedProducts"
