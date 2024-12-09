@@ -1,9 +1,10 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import {onMounted, ref} from "vue";
 import Pusher from "pusher-js";
-import { useRoute } from "vue-router";
+import Echo from "laravel-echo";
+import {useRoute} from "vue-router";
 import ApiService from "@/services/api";
-import { Tooltip } from "bootstrap";
+import {Tooltip} from "bootstrap";
 import TicketForm from "@/components/TicketForm.vue";
 import ProductList from "@/components/ProductsList.vue";
 
@@ -53,7 +54,7 @@ const addProduct = (product) => {
   if (existingProduct) {
     existingProduct.quantity += 1;
   } else {
-    selectedProducts.value.push({ ...product, quantity: 1 });
+    selectedProducts.value.push({...product, quantity: 1});
   }
   recalculateTotal();
 };
@@ -117,31 +118,36 @@ onMounted(() => {
     initializeTooltips();
   }, 500);
 
-  const pusher = new Pusher("ec70f976f6bec76964d2", {
-    cluster: "eu",
-  });
+  window.Pusher = Pusher;
+  const echo = new Echo({
+    broadcaster: 'pusher',
+    key: 'ec70f976f6bec76964d2',
+    cluster: 'eu',
+    forceTLS: true,
+  })
 
-  const channel = pusher.subscribe("booking_slots");
-  channel.bind("booking_slots", (data) => {
-    console.log("Updated slots:", data.updatedSlots);
 
-    data.updatedSlots.forEach((updatedSlot) => {
-      const slot = sessionData.value.slots.find((s) => s.id === updatedSlot.slot_id);
-      if (slot) {
-        slot.status = updatedSlot.status;
-      }
-    });
-  });
+  echo.channel('booking_slots').listen('.booking_slots', (data) => {
+    console.log("Updated slots:", data);
 
-  const slotStatusChannel = pusher.subscribe("slot_status");
-  slotStatusChannel.bind("slot.status.updated", (data) => {
-    console.log("Slot status updated:", data);
+      data.updatedSlots.forEach((updatedSlot) => {
+        const slot = sessionData.value.slots.find((s) => s.id === updatedSlot.slot_id);
+        if (slot) {
+          slot.status = updatedSlot.status;
+        }
+      });
+  })
+
+  echo.channel('slot_status').listen('.slot_status.sent', (data) => {
+    console.log("Updated slots 2:", data);
 
     const slot = sessionData.value.slots.find((s) => s.id === data.slot_id);
-    if (slot) {
-      slot.status = data.status;
-    }
-  });
+      if (slot) {
+        slot.status = data.status;
+      }
+
+    //console.log(JSON.stringify(sessionData.value.slots));
+  })
 });
 </script>
 
@@ -174,7 +180,8 @@ onMounted(() => {
             <i class="mdi mdi-map-marker"></i>
             <div>
               <h6>Location</h6>
-              <p class="m-0">{{ sessionData.hall.cinema.city.name }}, <br> {{ sessionData.hall.cinema.name }}, {{ sessionData.hall.name }}</p>
+              <p class="m-0">{{ sessionData.hall.cinema.city.name }}, <br> {{ sessionData.hall.cinema.name }},
+                {{ sessionData.hall.name }}</p>
             </div>
           </div>
           <div class="info-item">
@@ -212,9 +219,9 @@ onMounted(() => {
 
         <div v-if="currentView === 'seating'">
           <div style="text-align: center">
-            <hr />
+            <hr/>
             <h5>Screen</h5>
-            <br />
+            <br/>
           </div>
 
           <div class="seating-container mt-5">
