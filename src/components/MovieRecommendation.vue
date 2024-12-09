@@ -5,7 +5,6 @@ import { onMounted, ref, computed } from "vue";
 const recommendations = ref([]);
 const recommendedSessions = ref([]);
 
-// Получение активности пользователя
 const fetchUserActivity = async () => {
   try {
     const response = await ApiService.getUserActivity();
@@ -15,7 +14,6 @@ const fetchUserActivity = async () => {
   }
 };
 
-// Получение рекомендованных сеансов
 const fetchRecommendedSessions = async () => {
   try {
     const response = await ApiService.getRecommendedSessions();
@@ -25,7 +23,6 @@ const fetchRecommendedSessions = async () => {
   }
 };
 
-// Группировка сеансов по городу и кинотеатру
 const groupedSessions = computed(() => {
   const grouped = {};
   recommendedSessions.value.forEach((session) => {

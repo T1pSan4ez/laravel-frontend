@@ -132,6 +132,16 @@ onMounted(() => {
       }
     });
   });
+
+  const slotStatusChannel = pusher.subscribe("slot_status");
+  slotStatusChannel.bind("slot.status.updated", (data) => {
+    console.log("Slot status updated:", data);
+
+    const slot = sessionData.value.slots.find((s) => s.id === data.slot_id);
+    if (slot) {
+      slot.status = data.status;
+    }
+  });
 });
 </script>
 
