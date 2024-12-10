@@ -1,57 +1,92 @@
 <script setup>
-import { useTicketStore } from "@/stores/ticketStore";
-import { ref, computed, onMounted } from "vue";
-import QRCode from "qrcode";
+import {useTicketStore} from "@/stores/ticketStore";
+import {useAuthStore} from "@/stores/authStore";
+import {ref, onMounted} from "vue";
+import ApiService from "@/services/api";
+import router from "@/router";
 
 const ticketStore = useTicketStore();
+const authStore = useAuthStore();
 
-const qrCodeDataUrl = ref("");
 const email = ref("");
-const hasData = computed(() => {
-  return (
-    ticketStore.selectedSeats.length > 0 ||
-    ticketStore.selectedProducts.length > 0
-  );
-});
+const emailError = ref("");
+const isSubmitting = ref(false);
+const showModal = ref(false);
+const sessionId = ticketStore.sessionId;
 
-const generateQRCode = async () => {
-  if (!hasData.value) return;
+let purchaseCode = "";
+
+const validateEmail = () => {
+  if (!email.value.trim()) {
+    emailError.value = "Email is required.";
+    return false;
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.value)) {
+    emailError.value = "Please enter a valid email.";
+    return false;
+  }
+  emailError.value = "";
+  return true;
+};
+
+const handlePayment = async () => {
+  if (!validateEmail()) {
+    return;
+  }
+
+  isSubmitting.value = true;
+
+  purchaseCode = `${Date.now()}`;
+
+  const purchaseData = {
+    session_id: sessionId,
+    purchase_code: purchaseCode,
+    user_id: authStore.isAuthenticated ? authStore.user?.id : null,
+    email: email.value.trim(),
+    items: [
+      ...ticketStore.selectedSeats.map((seat) => ({
+        slot_id: seat.id,
+        item_name: `Row: ${seat.row}, Seat: ${seat.number}`,
+        quantity: 1,
+        price: parseFloat(seat.price),
+      })),
+      ...ticketStore.selectedProducts.map((product) => ({
+        product_id: product.id,
+        item_name: product.name,
+        quantity: product.quantity,
+        price: parseFloat(product.price),
+      })),
+    ],
+  };
 
   try {
-    const formattedData = [];
+    console.log("Purchase data:", purchaseData);
+    const response = await ApiService.addPurchase(purchaseData);
+    console.log("Purchase response:", response);
 
-    ticketStore.selectedSeats.forEach((seat) => {
-      const price = parseFloat(seat.price);
-      formattedData.push(`Row: ${seat.row}, Seat: ${seat.number} - ${price.toFixed(2)} UAH`);
-    });
-
-    ticketStore.selectedProducts.forEach((product) => {
-      const price = parseFloat(product.price);
-      formattedData.push(`${product.name} - ${product.quantity} x ${price.toFixed(2)} UAH`);
-    });
-
-    const total = parseFloat(ticketStore.totalAmount);
-    formattedData.push(`Total: ${total.toFixed(2)} UAH`);
-
-    const qrDataString = formattedData.join("\n");
-    qrCodeDataUrl.value = await QRCode.toDataURL(qrDataString, {
-      width: 300,
-      margin: 2,
-    });
+    showModal.value = true;
   } catch (error) {
-    console.error("Error generating QR Code:", error);
+    console.error("Error processing payment:", error);
+    emailError.value = "There was an error processing your payment. Please try again.";
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
-
-const handlePayment = () => {
-  if (!email.value.trim()) {
-    return;
+const setEmailIfAuthenticated = () => {
+  if (authStore.isAuthenticated && authStore.user?.email) {
+    email.value = authStore.user.email;
   }
+};
+
+const handleModalOk = () => {
+  showModal.value = false;
+  router.push({name: "Home"});
 };
 
 onMounted(() => {
-  generateQRCode();
+  setEmailIfAuthenticated();
 });
 </script>
 
@@ -68,10 +103,14 @@ onMounted(() => {
               type="email"
               class="form-control"
               v-model="email"
+              :class="{ 'is-invalid': emailError }"
               placeholder="Enter your email"
             />
+            <div v-if="emailError" class="invalid-feedback">
+              {{ emailError }}
+            </div>
           </div>
-          <hr />
+          <hr/>
           <h5>Seats</h5>
           <ul class="list-group mb-3">
             <li
@@ -99,25 +138,37 @@ onMounted(() => {
             </li>
           </ul>
           <h5>Total: <span class="text-danger">{{ ticketStore.totalAmount }} UAH</span></h5>
-          <button class="btn btn-success w-100 mt-3" @click="handlePayment">
-            Pay Now
+          <button
+            class="btn btn-success w-100 mt-3"
+            :disabled="isSubmitting"
+            @click="handlePayment"
+          >
+            {{ isSubmitting ? "Processing..." : "Pay Now" }}
           </button>
         </div>
       </div>
+    </div>
 
-      <div class="col-md-4">
-        <h3 class="text-center">Your QR Code</h3>
-        <div class="text-center my-4">
-          <div v-if="!hasData" class="alert alert-warning">
-            No data available to generate QR Code.
+    <div
+      v-if="showModal"
+      class="modal"
+      tabindex="-1"
+      role="dialog"
+      style="display: block; background: rgba(0, 0, 0, 0.5);"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Payment Successful</h5>
           </div>
-          <img
-            v-else-if="qrCodeDataUrl"
-            :src="qrCodeDataUrl"
-            alt="QR Code"
-            class="img-fluid"
-          />
-          <div v-else>Generating QR Code...</div>
+          <div class="modal-body">
+            <p>Your payment was processed successfully!</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="handleModalOk">
+              OK
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -136,12 +187,20 @@ onMounted(() => {
   border: 1px solid #ddd;
 }
 
-img {
-  max-width: 100%;
-  height: auto;
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.alert {
-  margin-top: 20px;
+.invalid-feedback {
+  color: red;
+  font-size: 0.875em;
 }
 </style>

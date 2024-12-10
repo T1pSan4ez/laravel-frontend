@@ -1,9 +1,8 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { defineProps, defineEmits } from "vue";
+import {computed, defineEmits, defineProps, onMounted, ref} from "vue";
 import ApiService from "@/services/api";
-import { useAuthStore } from "@/stores/authStore";
-import { useTicketStore } from "@/stores/ticketStore";
+import {useAuthStore} from "@/stores/authStore";
+import {useTicketStore} from "@/stores/ticketStore";
 import router from "@/router/index.js";
 
 const props = defineProps({
@@ -36,6 +35,10 @@ const currentView = ref("seating");
 const currentUser = ref(null);
 const ticketStore = useTicketStore();
 const authStore = useAuthStore();
+
+const hasItems = computed(() => {
+  return props.selectedSeats.length > 0 && props.selectedSeats.every(seat => seat.status === "booked");
+});
 
 const fetchCurrentUser = async () => {
   if (authStore.isAuthenticated) {
@@ -90,7 +93,7 @@ const handleSubmit = async () => {
 
 const addUserActivity = async (activityData) => {
   try {
-    const response = await ApiService.addUserActivity( {
+    const response = await ApiService.addUserActivity({
       movie_id: activityData.movie_id,
       action: activityData.action,
     });
@@ -110,6 +113,9 @@ const handleGenerateQRCode = () => {
 
 onMounted(() => {
   fetchCurrentUser();
+
+  const sessionId = props.sessionId;
+  ticketStore.setSessionId(sessionId);
 });
 </script>
 
@@ -188,8 +194,8 @@ onMounted(() => {
       >
         {{ isSubmitting ? "Processing..." : "Book Now" }}
       </button>
-      <button class="btn btn-success w-100 mt-3" @click="handleGenerateQRCode">
-        Generate QR Code
+      <button v-if="hasItems" class="btn btn-success w-100 mt-3" @click="handleGenerateQRCode">
+        Pay Now
       </button>
     </div>
   </div>

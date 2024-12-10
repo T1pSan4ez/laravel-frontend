@@ -145,8 +145,6 @@ onMounted(() => {
       if (slot) {
         slot.status = data.status;
       }
-
-    //console.log(JSON.stringify(sessionData.value.slots));
   })
 });
 </script>
@@ -235,7 +233,7 @@ onMounted(() => {
                 class="seat"
                 :class="{
                   'seat-selected': selectedSeats.some((seat) => seat.row === slot.row && seat.number === slot.number),
-                  'seat-booked': slot.status === 'booked',
+                  'seat-booked': slot.status === 'booked' || slot.status === 'paid',
                   'seat-vip': slot.type === 'vip' && slot.status !== 'booked',
                   'seat-available': slot.type !== 'vip' && slot.status !== 'booked' && !selectedSeats.some((seat) => seat.row === slot.row && seat.number === slot.number),
                 }"

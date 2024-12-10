@@ -5,6 +5,7 @@ export const useTicketStore = defineStore("ticketStore", {
     selectedSeats: [],
     selectedProducts: [],
     totalAmount: 0,
+    sessionId: null,
   }),
   actions: {
     setSelectedSeats(seats) {
@@ -22,6 +23,9 @@ export const useTicketStore = defineStore("ticketStore", {
         0
       );
       this.totalAmount = seatTotal + productTotal;
+    },
+    setSessionId(sessionId) {
+      this.sessionId = sessionId;
     },
     resetData() {
       this.selectedSeats = [];

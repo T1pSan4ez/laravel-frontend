@@ -310,6 +310,15 @@ class ApiService {
     }
   }
 
+  async addPurchase(purchaseData) {
+    try {
+      const response = await axiosInstance.post(`/purchases`, purchaseData);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding purchase:", error);
+      throw error.response?.data || error;
+    }
+  }
 
 
 }
