@@ -12,6 +12,9 @@ const qrCodeImage = ref(null);
 const isGeneratingQR = ref(false);
 const qrError = ref(null);
 
+const nameError = ref("");
+const passwordError = ref("");
+
 const fetchUserProfile = async () => {
   try {
     const user = await ApiService.getUserProfile();
@@ -23,6 +26,13 @@ const fetchUserProfile = async () => {
 };
 
 const updateProfile = async () => {
+  nameError.value = "";
+
+  if (!name.value.trim()) {
+    nameError.value = "Name cannot be empty.";
+    return;
+  }
+
   const formData = new FormData();
   formData.append("name", name.value);
 
@@ -31,10 +41,23 @@ const updateProfile = async () => {
     await fetchUserProfile();
   } catch (error) {
     console.error("Ошибка при обновлении профиля:", error);
+    nameError.value = "Ошибка при сохранении изменений. Попробуйте снова.";
   }
 };
 
 const updatePassword = async () => {
+  passwordError.value = "";
+
+  if (!password.value || password.value.length < 8) {
+    passwordError.value = "Password must be at least 8 characters.";
+    return;
+  }
+
+  if (password.value !== passwordConfirmation.value) {
+    passwordError.value = "Passwords do not match.";
+    return;
+  }
+
   try {
     await ApiService.changePassword({
       password: password.value,
@@ -44,6 +67,7 @@ const updatePassword = async () => {
     passwordConfirmation.value = "";
   } catch (error) {
     console.error("Ошибка при обновлении пароля:", error);
+    passwordError.value = "Не удалось изменить пароль. Попробуйте снова.";
   }
 };
 
@@ -89,6 +113,7 @@ onMounted(() => {
                   type="text"
                   class="form-control"
                 />
+                <div v-if="nameError" class="text-danger">{{ nameError }}</div>
               </div>
               <button type="submit" class="btn btn-primary">
                 Update Profile
@@ -122,6 +147,8 @@ onMounted(() => {
                   class="form-control"
                 />
               </div>
+
+              <div v-if="passwordError" class="text-danger">{{ passwordError }}</div>
 
               <button type="submit" class="btn btn-danger">
                 Update Password

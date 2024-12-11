@@ -23,13 +23,33 @@ const fetchMoviesByCinema = async () => {
 
   try {
     const response = await ApiService.getMoviesByCinema(cinemaStore.selectedCinema.id);
-    movies.value = response.data.map(movie => ({
-      ...movie,
-      sessions: movie.sessions.map(session => ({
-        id: session.id,
-        time: new Date(session.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      })),
-    }));
+    movies.value = response.data.map((movie) => {
+      const now = new Date();
+      const futureSessions = movie.sessions.filter(
+        (session) => new Date(session.start_time) > now
+      );
+      const closestSession = futureSessions.length
+        ? {
+          id: futureSessions[0].id,
+          time: new Date(futureSessions[0].start_time).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }
+        : null;
+
+      return {
+        ...movie,
+        closestSession,
+        sessions: movie.sessions.map((session) => ({
+          id: session.id,
+          time: new Date(session.start_time).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        })),
+      };
+    });
   } catch (error) {
     console.error("Error fetching movies:", error);
   }
@@ -96,8 +116,16 @@ watch(
             </div>
             <div class="movie-bottom">
               <h3 style="margin-top: 150px">Global</h3>
-              <p>19 December</p>
-              <p>Closest session:</p>
+              <p>календарь</p>
+              <p>Closest session:
+                <router-link
+                  v-if="movie.closestSession && movie.closestSession.id"
+                  :to="{ name: 'session', params: { id: movie.closestSession.id } }"
+                >
+                  {{ movie.closestSession.time }}
+                </router-link>
+                <span v-else>No sessions available</span>
+              </p>
               <p>Session schedule:</p>
               <div class="session-info">
                 <span

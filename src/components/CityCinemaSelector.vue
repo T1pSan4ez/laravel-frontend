@@ -30,6 +30,7 @@ const selectCity = (cityId) => {
 const selectCinema = (cinema) => {
   if (selectedCity.value) {
     emit("select", selectedCity.value, cinema);
+    emit("close");
   }
 };
 

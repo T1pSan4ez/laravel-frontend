@@ -208,7 +208,8 @@ onMounted(() => {
 }
 
 .card img {
-  height: 300px;
+  height: 600px;
+
   object-fit: cover;
   margin-bottom: 1rem;
 }
