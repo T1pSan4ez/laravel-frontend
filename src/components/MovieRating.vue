@@ -70,7 +70,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="text-center">
+  <div class="text-end">
     <h4>Rating:</h4>
     <div>
       <div>

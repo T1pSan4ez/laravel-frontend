@@ -72,7 +72,14 @@ watch(searchQuery, (newSearch) => {
   debouncedFetchMovies();
 });
 
-watch([sortBy, sortOrder, currentPage], fetchMovies);
+watch([sortBy, sortOrder, currentPage], () => {
+  fetchMovies();
+  scrollToTop();
+});
+
+const scrollToTop = () => {
+  window.scrollTo(0, 0);
+};
 
 onMounted(() => {
   fetchGenres();

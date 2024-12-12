@@ -40,6 +40,10 @@ const hasItems = computed(() => {
   return props.selectedSeats.length > 0 && props.selectedSeats.every(seat => seat.status === "booked");
 });
 
+const hasSelectedSeats = computed(() => {
+  return props.selectedSeats.length > 0;
+});
+
 const fetchCurrentUser = async () => {
   if (authStore.isAuthenticated) {
     try {
@@ -174,20 +178,21 @@ onMounted(() => {
         Total: <span class="text-danger">{{ totalAmount.toFixed(2) }} UAH</span>
       </h5>
       <button
-        v-if="currentView === 'seating'"
+        v-if="currentView === 'seating' && hasSelectedSeats"
         class="btn btn-primary w-100 mt-2"
         @click="handleViewSwitch"
       >
         Continue to Snacks
       </button>
       <button
-        v-else
+        v-if="currentView !== 'seating' && hasSelectedSeats"
         class="btn btn-secondary w-100 mt-2"
         @click="handleViewSwitch"
       >
         Back to Seating
       </button>
       <button
+        v-if="hasSelectedSeats"
         class="btn btn-danger w-100 mt-2"
         :disabled="isSubmitting"
         @click="handleSubmit"

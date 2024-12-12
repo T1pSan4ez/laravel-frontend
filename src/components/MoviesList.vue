@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, watch, ref } from "vue";
+import {onMounted, watch, ref, computed} from "vue";
 import ApiService from "@/services/api";
 import { useCinemaStore } from "@/stores/cinemaStore";
 
@@ -14,6 +14,16 @@ const cinemaStore = useCinemaStore();
 const movies = ref([]);
 const swiperContainer = ref(null);
 const placeholderImage = "https://via.placeholder.com/300x450?text=No+Image";
+const showModal = ref(false);
+const iframeSrc = ref("https://www.youtube.com/embed/dQw4w9WgXcQ");
+
+const openModal = () => {
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+};
 
 const fetchMoviesByCinema = async () => {
   if (!cinemaStore.selectedCinema) {
@@ -23,37 +33,49 @@ const fetchMoviesByCinema = async () => {
 
   try {
     const response = await ApiService.getMoviesByCinema(cinemaStore.selectedCinema.id);
+    console.log(response.data);
+
     movies.value = response.data.map((movie) => {
-      const now = new Date();
-      const futureSessions = movie.sessions.filter(
-        (session) => new Date(session.start_time) > now
-      );
-      const closestSession = futureSessions.length
-        ? {
-          id: futureSessions[0].id,
-          time: new Date(futureSessions[0].start_time).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }
-        : null;
+      const uniqueDates = Array.from(
+        new Set(
+          movie.sessions.map((session) =>
+            new Date(session.start_time).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          )
+        )
+      ).sort((a, b) => new Date(a) - new Date(b));
 
       return {
         ...movie,
-        closestSession,
-        sessions: movie.sessions.map((session) => ({
+        availableDates: Array.from(uniqueDates).sort(
+          (a, b) => new Date(a) - new Date(b)
+        ),
+        selectedDate: uniqueDates[0] || "",
+        filteredSessions: movie.sessions.map((session) => ({
           id: session.id,
+          date: new Date(session.start_time).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
           time: new Date(session.start_time).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           }),
+          isPast: new Date() > new Date(session.start_time),
         })),
       };
     });
+
+    movies.value.forEach((movie) => filterSessionsByDate(movie));
   } catch (error) {
     console.error("Error fetching movies:", error);
   }
 };
+
 
 const scrollLeft = () => {
   swiperContainer.value.scrollBy({
@@ -69,6 +91,46 @@ const scrollRight = () => {
   });
 };
 
+const filterSessionsByDate = (movie) => {
+  if (!movie.selectedDate) {
+    movie.filteredSessions = movie.sessions.map((session) => ({
+      id: session.id,
+      date: new Date(session.start_time).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      time: new Date(session.start_time).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }));
+  } else {
+    movie.filteredSessions = movie.sessions
+      .filter(
+        (session) =>
+          new Date(session.start_time).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }) === movie.selectedDate
+      )
+      .map((session) => ({
+        id: session.id,
+        date: new Date(session.start_time).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        time: new Date(session.start_time).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        isPast: new Date() > new Date(session.start_time),
+      }));
+  }
+};
+
 watch(
   () => cinemaStore.selectedCinema,
   () => {
@@ -76,6 +138,10 @@ watch(
   },
   { immediate: true }
 );
+
+onMounted(() => {
+  fetchMoviesByCinema();
+});
 </script>
 
 <template>
@@ -111,31 +177,43 @@ watch(
           <div class="blur-overlay"></div>
           <div class="movie-info">
             <div class="movie-top">
-              <span class="movie-action">More details</span>
-              <span class="movie-action">Watch</span>
+              <router-link style="text-decoration: none; color: white" :to="{ name: 'MovieDetails', params: { id: movie.id } }">
+                <span class="movie-action">More details</span>
+              </router-link>
+              <span class="movie-action" style="cursor: pointer;" @click="openModal">Watch</span>
             </div>
             <div class="movie-bottom">
               <h3 style="margin-top: 150px">Global</h3>
-              <p>календарь</p>
-              <p>Closest session:
-                <router-link
-                  v-if="movie.closestSession && movie.closestSession.id"
-                  :to="{ name: 'session', params: { id: movie.closestSession.id } }"
+              <div class="mb-3">
+                <select
+                  v-model="movie.selectedDate"
+                  class="form-select"
+                  @change="filterSessionsByDate(movie)"
                 >
-                  {{ movie.closestSession.time }}
-                </router-link>
-                <span v-else>No sessions available</span>
-              </p>
+                  <option
+                    v-for="(date, index) in movie.availableDates"
+                    :key="index"
+                    :value="date"
+                  >
+                    {{ date }}
+                  </option>
+                </select>
+              </div>
               <p>Session schedule:</p>
               <div class="session-info">
                 <span
-                  v-for="(session, index) in movie.sessions"
+                  v-for="(session, index) in movie.filteredSessions"
                   :key="index"
                   class="session-time"
                 >
-                  <router-link :to="{ name: 'session', params: { id: session.id } }">
+                  <router-link
+                    v-if="!session.isPast"
+                    style="text-decoration: none; color: #5b9aff;"
+                    :to="{ name: 'session', params: { id: session.id } }"
+                  >
                     {{ session.time }}
                   </router-link>
+                  <span v-else style="color: #fdfdfd;">{{ session.time }}</span>
                 </span>
               </div>
             </div>
@@ -146,9 +224,29 @@ watch(
         </div>
       </div>
     </div>
+
+    <div
+      v-if="showModal"
+      class="modal-overlay"
+      @click.self="closeModal"
+      style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;"
+    >
+      <div class="modal-content" style="position: relative; width: 80%; height: 80%; background: #000;">
+        <button
+          @click="closeModal"
+          style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;"
+        >&times;</button>
+        <iframe
+          :src="iframeSrc"
+          frameborder="0"
+          allow="autoplay; encrypted-media"
+          allowfullscreen
+          style="width: 100%; height: 100%;"
+        ></iframe>
+      </div>
+    </div>
   </div>
 </template>
-
 
 <style scoped>
 html,
