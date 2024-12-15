@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from "vue";
 import ApiService from "@/services/api";
 import notAvailableImage from "@/assets/not-avaliable.png";
 import debounce from "lodash.debounce";
+import {useRoute, useRouter} from "vue-router";
 
 const movies = ref([]);
 const genres = ref([]);
@@ -13,6 +14,8 @@ const selectedGenres = ref([]);
 const appliedGenres = ref([]);
 const sortBy = ref("");
 const sortOrder = ref("desc");
+const route = useRoute();
+const router = useRouter();
 
 const fetchMovies = async () => {
   try {
@@ -51,8 +54,21 @@ const toggleGenre = (genreId) => {
   }
 };
 
+const updateQueryParams = () => {
+  const query = {
+    search: searchQuery.value || undefined,
+    genre_ids: selectedGenres.value.length ? selectedGenres.value.join(",") : undefined,
+    sort_by: sortBy.value || undefined,
+    order: sortOrder.value || undefined,
+    page: currentPage.value > 1 ? currentPage.value : undefined,
+  };
+  router.replace({ query });
+};
+
 const applyFilters = () => {
   appliedGenres.value = [...selectedGenres.value];
+  currentPage.value = 1;
+  updateQueryParams();
   fetchMovies();
 };
 
@@ -66,13 +82,15 @@ const resetFilters = () => {
   fetchMovies();
 };
 
-const debouncedFetchMovies = debounce(fetchMovies, 1000);
+const debouncedFetchMovies = debounce(fetchMovies, 500);
 
 watch(searchQuery, (newSearch) => {
   debouncedFetchMovies();
+  updateQueryParams();
 });
 
 watch([sortBy, sortOrder, currentPage], () => {
+  updateQueryParams();
   fetchMovies();
   scrollToTop();
 });
@@ -83,6 +101,16 @@ const scrollToTop = () => {
 
 onMounted(() => {
   fetchGenres();
+
+  const { search, genre_ids, sort_by, order, page } = route.query;
+
+  searchQuery.value = search || "";
+  selectedGenres.value = genre_ids ? genre_ids.split(",").map(Number) : [];
+  appliedGenres.value = [...selectedGenres.value];
+  sortBy.value = sort_by || "";
+  sortOrder.value = order || "desc";
+  currentPage.value = parseInt(page) || 1;
+
   fetchMovies();
 });
 </script>

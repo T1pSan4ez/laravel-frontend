@@ -20,6 +20,8 @@ const errors = ref({
   password_confirmation: "",
 });
 
+const generalError = ref("");
+
 const validateForm = () => {
   let isValid = true;
 
@@ -65,6 +67,8 @@ const handleRegister = async () => {
     return;
   }
 
+  generalError.value = "";
+
   try {
     const response = await ApiService.register(registerForm.value);
 
@@ -75,9 +79,14 @@ const handleRegister = async () => {
       authStore.loginSuccess(token);
       console.log("Registration successful:", response);
 
-      await router.push({name: "Home"});
+      await router.push({ name: "Home" });
     }
   } catch (error) {
+    if (error.response && error.response.status === 422) {
+      generalError.value = error.response.data.message || "This email is already registered. Please use another one.";
+    } else {
+      generalError.value = "An unexpected error occurred. Please try again later.";
+    }
     console.error("Registration error:", error);
   }
 };
@@ -86,6 +95,9 @@ const handleRegister = async () => {
 <template>
   <form @submit.prevent="handleRegister">
     <div class="mb-3">
+      <div v-if="generalError" class="alert alert-danger mt-3">
+        {{ generalError }}
+      </div>
       <label for="registerName" class="form-label">Full Name</label>
       <input
         type="text"

@@ -320,6 +320,30 @@ class ApiService {
     }
   }
 
+  async getUserPurchases() {
+    try {
+      const response = await axiosInstance.get(`/user/purchases`);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting purchases:", error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async updateAvatar(data) {
+    try {
+      const response = await axiosInstance.post('/user/avatar', data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      throw error.response?.data || error;
+    }
+  }
+
 
 }
 

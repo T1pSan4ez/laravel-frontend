@@ -10,7 +10,7 @@ const fetchUserActivity = async () => {
     const response = await ApiService.getUserActivity();
     recommendations.value = response.recommendations;
   } catch (error) {
-    console.error("Ошибка при получении активности пользователя:", error);
+    console.error("Error fetching user activity:", error);
   }
 };
 
@@ -19,7 +19,7 @@ const fetchRecommendedSessions = async () => {
     const response = await ApiService.getRecommendedSessions();
     recommendedSessions.value = response.sessions;
   } catch (error) {
-    console.error("Ошибка при получении рекомендованных сеансов:", error);
+    console.error("Error fetching recommended sessions:", error);
   }
 };
 
@@ -51,7 +51,7 @@ onMounted(() => {
 
 <template>
   <div class="container mt-4">
-    <div class="container mt-4" v-if="recommendations.length > 0">
+    <div v-if="recommendations.length > 0" class="container mt-4">
       <h2 class="mb-4">Recommended Movies</h2>
       <div class="row">
         <div
@@ -71,9 +71,11 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <div v-else class="text-center mt-4">
+      <p class="alert alert-info">No recommendations available. Stay tuned for new releases!</p>
+    </div>
 
-
-    <div class="container mt-4" v-if="recommendedSessions.length > 0">
+    <div v-if="recommendedSessions.length > 0" class="container mt-4">
       <h2 class="mb-4">Recommended Sessions</h2>
       <div>
         <div
@@ -97,13 +99,16 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <div v-else class="text-center mt-4">
+      <p class="alert alert-info">No sessions available. Check back later for more options!</p>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .movie-poster {
   width: 100%;
-  height: 400px;
+  height: 500px;
   object-fit: cover;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

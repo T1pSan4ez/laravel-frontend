@@ -20,6 +20,8 @@ const errors = ref({
   password: "",
 });
 
+const loginError = ref("");
+
 const validateForm = () => {
   let isValid = true;
 
@@ -53,6 +55,8 @@ const handleLogin = async () => {
     return;
   }
 
+  loginError.value = "";
+
   try {
     const response = await ApiService.login({
       email: loginForm.value.email,
@@ -69,6 +73,11 @@ const handleLogin = async () => {
       await router.push({ name: "Home" });
     }
   } catch (error) {
+    if (error.response && error.response.status === 401) {
+      loginError.value = "Login or password is incorrect.";
+    } else {
+      loginError.value = "An error occurred while logging in.";
+    }
     console.error("Login error:", error);
   }
 };
@@ -78,7 +87,7 @@ const loginWithGoogle = async () => {
   try {
     window.location.href = await ApiService.loginWithGoogleRedirect();
   } catch (error) {
-    console.error("Ошибка входа через Google:", error);
+    console.error("Error occurred while logging in with Google:", error);
   }
 };
 
@@ -111,8 +120,8 @@ const handleQRTokenLogin = async () => {
     }
   } catch (error) {
     qrError.value =
-      error.message || "Ошибка при входе с использованием QR-кода.";
-    console.error("Ошибка при авторизации через QR-код:", error);
+      error.message || "Error occurred while logging in with QR code.";
+    console.error("Error occurred while logging in with QR code:", error);
   }
 };
 
@@ -124,6 +133,9 @@ onMounted(() => {
 <template>
   <form @submit.prevent="handleLogin">
     <div class="mb-3">
+      <div v-if="loginError" class="alert alert-danger mt-3">
+        {{ loginError }}
+      </div>
       <label for="loginEmail" class="form-label">Email address</label>
       <input
         type="email"
