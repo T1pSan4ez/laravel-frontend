@@ -50,9 +50,10 @@ const fetchMoviesByCinema = async () => {
 
       return {
         ...movie,
-        availableDates: Array.from(uniqueDates).sort(
-          (a, b) => new Date(a) - new Date(b)
-        ),
+        availableDates: Array.from(uniqueDates)
+          .sort((a, b) => new Date(a) - new Date(b))
+          .slice(0, 7)
+        ,
         selectedDate: uniqueDates[0] || "",
         filteredSessions: movie.sessions.map((session) => ({
           id: session.id,
