@@ -77,7 +77,9 @@ const handleRegister = async () => {
     if (token) {
       localStorage.setItem("authToken", token);
       authStore.loginSuccess(token);
-      console.log("Registration successful:", response);
+
+      const userProfile = await ApiService.getUserProfile();
+      authStore.setUser(userProfile.data.name);
 
       await router.push({ name: "Home" });
     }
@@ -87,7 +89,6 @@ const handleRegister = async () => {
     } else {
       generalError.value = "An unexpected error occurred. Please try again later.";
     }
-    console.error("Registration error:", error);
   }
 };
 </script>

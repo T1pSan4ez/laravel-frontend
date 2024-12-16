@@ -3,6 +3,9 @@ import {ref, onMounted} from "vue";
 import ApiService from "@/services/api.js";
 import QRCode from "qrcode";
 import MovieRecommendation from "@/components/MovieRecommendation.vue";
+import { useAuthStore } from "@/stores/authStore.js";
+
+const authStore = useAuthStore();
 
 const name = ref("");
 const email = ref(null);
@@ -79,6 +82,9 @@ const updateProfile = async () => {
   try {
     await ApiService.changeProfile({name: name.value});
     await fetchUserProfile();
+
+    authStore.setUser(name.value);
+
     successMessage.value = "Profile updated successfully.";
   } catch (error) {
     console.error("Error updating profile:", error);

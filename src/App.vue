@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import {computed, ref} from "vue";
 import { useCinemaStore } from "@/stores/cinemaStore";
 import { useAuthStore } from "@/stores/authStore";
 import CityCinemaSelector from "@/components/CityCinemaSelector.vue";
@@ -40,6 +40,11 @@ authStore.$subscribe((mutation, state) => {
     router.push({ name: "Home" });
   }
 });
+
+const truncatedUserName = computed(() => {
+  const userName = authStore.user || "User";
+  return userName.length > 20 ? userName.substring(0, 20) + "..." : userName;
+});
 </script>
 
 <template>
@@ -61,7 +66,7 @@ authStore.$subscribe((mutation, state) => {
 
         <template v-if="authStore.isAuthenticated">
           <button class="btn btn-outline-light ms-3" @click="navigateToProfile">
-            Profile
+            {{ truncatedUserName }}
           </button>
           <button class="btn btn-outline-light ms-3" @click="logout">
             Logout
